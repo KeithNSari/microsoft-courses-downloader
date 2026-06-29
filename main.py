@@ -30,7 +30,7 @@ DEFAULT_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.0"
 }
 
-PAGE_TITLE_IGNORE = ("Knowledge check", "Module assessment", "Exercise - ")
+PAGE_TITLE_IGNORE = ("Knowledge check", "Module assessment", "Exercise - ")#TODO: changed to include excersises
 
 HTML_STYLES = """
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; line-height: 1.6; }
@@ -407,6 +407,7 @@ class HtmlGenerator:
         safe_title = self._sanitize_filename(module_data.title)
 
         html_filename = f"{numbered_prefix}-{safe_title}.html"
+
         output_file = os.path.join(output_dir, html_filename)
 
         html_content = self._build_html(module_data, unit_links)
@@ -416,6 +417,56 @@ class HtmlGenerator:
 
         return output_file
 
+    # Is creating the document
+    def m_generate_unit_html(
+        self,
+        module_url: str,
+        unit_links: list[str],
+        output_dir: str,
+        numbered_prefix: str,
+    ) -> str:
+        """Generate a combined HTML file with all unit contents."""
+        module_data = self.content_service.fetch_page(module_url)
+        safe_title = self._sanitize_filename(module_data.title)
+
+        html_filename = f"{numbered_prefix}-{safe_title}.html"
+        output_file = os.path.join(output_dir, html_filename)
+
+        html_content = self._build_html(module_data, unit_links)
+
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(html_content)
+
+        return output_file
+
+    def m_create_html_file(
+            self,html_content,
+            output_dir: str,
+            numbered_prefix: str,
+            safe_title: str
+    ):
+        html_filename = f"{numbered_prefix}-{safe_title}.html"
+        output_file = os.path.join(output_dir, html_filename)
+
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(html_content)
+
+        return output_file
+    #Is fetching individual unit pages and gluing them together
+    def m_build_html(self, module_data: PageContent, unit_links: list[str]) -> str:
+        """Build the complete HTML document."""
+        index = 1
+        for link in unit_links:
+            page_data = self.content_service.fetch_page(link)
+            if page_data.title.startswith(PAGE_TITLE_IGNORE):
+                continue
+            output_file = self.m_generate_unit_html()
+
+            index += 1
+        #TODO: Will need to add part for fetching unit title
+        #return self._build_document(module_data.title, sections)
+
+    #Is fetching individual unit pages and gluing them together
     def _build_html(self, module_data: PageContent, unit_links: list[str]) -> str:
         """Build the complete HTML document."""
         sections = []
@@ -426,7 +477,7 @@ class HtmlGenerator:
                 continue
             sections.append(self._build_section(index, page_data))
             index += 1
-
+        #TODO: Will need to add part for fetching unit title
         return self._build_document(module_data.title, sections)
 
     def _build_section(self, index: int, page_data: PageContent) -> str:
@@ -440,6 +491,7 @@ class HtmlGenerator:
         <div class="content">{page_data.content}</div>
     </div>"""
 
+    #Makes the HTML look nice
     def _build_document(self, title: str, sections: list[str]) -> str:
         """Build the complete HTML document structure."""
         sections_html = "\n".join(sections)
@@ -681,10 +733,38 @@ class CourseProcessor:
 
         print(f"      Found {len(unit_links)} unit(s)")
 
-        numbered_prefix = f"{index:02d}"
-        html_file = self.html_generator.generate_module_html(
-            module_url, unit_links, path_dir, numbered_prefix
-        )
+        #TODO: html_generator_return_units
+        numbered_prefix = f"{index:02d}"#TODO: Figure out what this does.
+        #html_file = self.html_generator.generate_module_html(
+         #   module_url, unit_links, path_dir, numbered_prefix
+        #)
+
+        # TODO: Add New Folder
+        # TODO: New Numbering inside folder
+        index = 1
+        for link in unit_links:
+            page_data = self.content_service.fetch_page(link)
+            if page_data.title.startswith(PAGE_TITLE_IGNORE):
+                continue
+            
+            safe_title = self._sanitize_filename(page_data.title)
+            section = self.html_generator._build_section(index, page_data)
+            html_content = self.html_generator._build_document(page_data.title, section)
+
+            html_file = self.html_generator.m_create_html_file(
+                html_content, path_dir, numbered_prefix, safe_title
+            )
+
+            self.m_call_printer(html_file)
+            index += 1
+
+        #print(f"      Generated: {html_file}")
+
+        #pdf_file = self.pdf_generator.generate(html_file)
+        #if pdf_file:
+        #    print(f"      Generated: {pdf_file}")
+
+    def m_call_printer(self,html_file):
         print(f"      Generated: {html_file}")
 
         pdf_file = self.pdf_generator.generate(html_file)
