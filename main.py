@@ -733,26 +733,31 @@ class CourseProcessor:
 
         print(f"      Found {len(unit_links)} unit(s)")
 
-        #TODO: html_generator_return_units
-        numbered_prefix = f"{index:02d}"#TODO: Figure out what this does.
+
+        #numbered_prefix = f"{index:02d}"
         #html_file = self.html_generator.generate_module_html(
          #   module_url, unit_links, path_dir, numbered_prefix
         #)
 
-        # TODO: Add New Folder
-        # TODO: New Numbering inside folder
+        # Add New Folder
+        # New Numbering inside folder
+        path_name = self._sanitize_dir_name(module_name)
+        numbered_name = f"{index:02d}-{path_name}"
+        module_path_dir = os.path.join(path_dir, numbered_name)
+
+
         index = 1
         for link in unit_links:
             page_data = self.content_service.fetch_page(link)
             if page_data.title.startswith(PAGE_TITLE_IGNORE):
                 continue
-            
-            safe_title = self._sanitize_filename(page_data.title)
+
+            safe_title = self.html_generator._sanitize_filename(page_data.title)
             section = self.html_generator._build_section(index, page_data)
             html_content = self.html_generator._build_document(page_data.title, section)
 
             html_file = self.html_generator.m_create_html_file(
-                html_content, path_dir, numbered_prefix, safe_title
+                html_content, module_path_dir, f"{index}", safe_title
             )
 
             self.m_call_printer(html_file)
