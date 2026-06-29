@@ -463,7 +463,6 @@ class HtmlGenerator:
             output_file = self.m_generate_unit_html()
 
             index += 1
-        #TODO: Will need to add part for fetching unit title
         #return self._build_document(module_data.title, sections)
 
     #Is fetching individual unit pages and gluing them together
@@ -477,7 +476,6 @@ class HtmlGenerator:
                 continue
             sections.append(self._build_section(index, page_data))
             index += 1
-        #TODO: Will need to add part for fetching unit title
         return self._build_document(module_data.title, sections)
 
     def _build_section(self, index: int, page_data: PageContent) -> str:
