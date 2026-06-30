@@ -12,6 +12,7 @@ from typing import Optional
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 from playwright.async_api import async_playwright
+from pathlib import Path
 
 
 # =============================================================================
@@ -516,15 +517,12 @@ class HtmlGenerator:
                             <meta charset="UTF-8">
                             <meta name="viewport" content="width=device-width, initial-scale=1.0">
                             <title>{page_data.title}</title>
+                            <a href="{page_data.url}">{page_data.url}</a>
                             <style>{HTML_STYLES}</style>
                         </head>
                         <body>
                             <h1>{page_data.title}</h1>
                             <div class="section">
-                                <div class="section-header">
-                                    <h2>{index}. {page_data.title}</h2>
-                                    <a href="{page_data.url}">{page_data.url}</a>
-                                </div>
                                 <div class="content">{page_data.content}</div>
                             </div>
                         </body>
@@ -556,8 +554,10 @@ class PdfGenerator:
             browser = await p.chromium.launch()
             page = await browser.new_page()
 
-            html_path = os.path.abspath(html_file)
-            await page.goto(f"file:///{html_path}")
+            #html_path = os.path.abspath(html_file)
+            #await page.goto(f"file:///{html_path}")
+            html_path = Path(html_file).resolve().as_uri()
+            await page.goto(html_path)
             await page.wait_for_load_state("networkidle")
 
             await page.pdf(
@@ -767,11 +767,11 @@ class CourseProcessor:
             safe_title = self.html_generator._sanitize_filename(page_data.title)
             html_content = self.html_generator.m_build_document(index, page_data)
 
-            html_file = self.html_generator.m_create_html_file(
+            html_file_path = self.html_generator.m_create_html_file(
                 html_content, module_path_dir, f"{index}", safe_title
             )
 
-            self.m_call_printer(html_file)
+            self.m_call_printer(html_file_path)
             index += 1
 
         #print(f"      Generated: {html_file}")
