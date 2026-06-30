@@ -558,13 +558,11 @@ class PdfGenerator:
 
         pdf_path.parent.mkdir(parents=True, exist_ok=True)
 
-        html_content = html_path.read_text(encoding="utf-8")
-
         async with async_playwright() as p:
             browser = await p.chromium.launch()
             try:
                 page = await browser.new_page()
-                await page.set_content(html_content, wait_until="load")
+                await page.goto(html_path.as_uri(), wait_until="networkidle")
 
                 await page.pdf(
                     path=str(pdf_path),
