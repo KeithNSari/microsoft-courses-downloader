@@ -753,14 +753,6 @@ class CourseProcessor:
 
         print(f"      Found {len(unit_links)} unit(s)")
 
-
-        #numbered_prefix = f"{index:02d}"
-        #html_file = self.html_generator.generate_module_html(
-         #   module_url, unit_links, path_dir, numbered_prefix
-        #)
-
-        # Add New Folder
-        # New Numbering inside folder
         path_name = self._sanitize_dir_name(module_name)
         numbered_name = f"{index:02d}-{path_name}"
         module_path_dir = os.path.join(path_dir, numbered_name)
