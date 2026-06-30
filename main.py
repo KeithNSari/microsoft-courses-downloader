@@ -30,7 +30,7 @@ DEFAULT_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.0"
 }
 
-PAGE_TITLE_IGNORE = ("Knowledge check", "Module assessment", "Exercise - ")#TODO: changed to include excersises
+PAGE_TITLE_IGNORE = ()#"Knowledge check", "Module assessment", "Exercise - ")# changed to include excersises
 
 HTML_STYLES = """
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; line-height: 1.6; }
