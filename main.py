@@ -550,38 +550,43 @@ class PdfGenerator:
     @staticmethod
     async def convert_html_to_pdf(html_file: str, pdf_file: str) -> str:
         """Convert an HTML file to PDF using Playwright."""
+        html_path = Path(html_file).expanduser().resolve()
+        pdf_path = Path(pdf_file).expanduser().resolve()
+
+        if not html_path.is_file():
+            raise FileNotFoundError(f"HTML file not found: {html_path}")
+
+        pdf_path.parent.mkdir(parents=True, exist_ok=True)
+
+        html_content = html_path.read_text(encoding="utf-8")
+
         async with async_playwright() as p:
             browser = await p.chromium.launch()
-            page = await browser.new_page()
+            try:
+                page = await browser.new_page()
+                await page.set_content(html_content, wait_until="load")
 
-            #html_path = os.path.abspath(html_file)
-            #await page.goto(f"file:///{html_path}")
-            html_path = Path(html_file).resolve().as_uri()
-            await page.goto(html_path)
-            await page.wait_for_load_state("networkidle")
+                await page.pdf(
+                    path=str(pdf_path),
+                    format="A4",
+                    margin={
+                        "top": "20px",
+                        "right": "20px",
+                        "bottom": "20px",
+                        "left": "20px",
+                    },
+                    print_background=True,
+                )
+            finally:
+                await browser.close()
 
-            await page.pdf(
-                path=pdf_file,
-                format="A4",
-                margin={
-                    "top": "20px",
-                    "right": "20px",
-                    "bottom": "20px",
-                    "left": "20px",
-                },
-                print_background=True,
-            )
-
-            await browser.close()
-
-        return pdf_file
+        return str(pdf_path)
 
     def generate(self, html_file: str) -> Optional[str]:
         """Generate PDF from HTML file, handling errors gracefully."""
-        pdf_file = html_file.replace(".html", ".pdf")
+        pdf_file = str(Path(html_file).with_suffix(".pdf"))
         try:
-            asyncio.run(self.convert_html_to_pdf(html_file, pdf_file))
-            return pdf_file
+            return asyncio.run(self.convert_html_to_pdf(html_file, pdf_file))
         except Exception as e:
             print(f"      Warning: Failed to generate PDF: {e}")
             return None
