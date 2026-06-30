@@ -494,18 +494,41 @@ class HtmlGenerator:
         sections_html = "\n".join(sections)
 
         return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title}</title>
-    <style>{HTML_STYLES}</style>
-</head>
-<body>
-    <h1>{title}</h1>
-{sections_html}
-</body>
-</html>"""
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>{title}</title>
+                    <style>{HTML_STYLES}</style>
+                </head>
+                <body>
+                    <h1>{title}</h1>
+                {sections_html}
+                </body>
+                </html>"""
+
+    def m_build_document(self, index: int, page_data: PageContent) -> str:
+            """Build the Unit by unit HTML document structure."""
+
+            return f"""<!DOCTYPE html>
+                    <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <title>{page_data.title}</title>
+                            <style>{HTML_STYLES}</style>
+                        </head>
+                        <body>
+                            <h1>{page_data.title}</h1>
+                            <div class="section">
+                                <div class="section-header">
+                                    <h2>{index}. {page_data.title}</h2>
+                                    <a href="{page_data.url}">{page_data.url}</a>
+                                </div>
+                                <div class="content">{page_data.content}</div>
+                            </div>
+                        </body>
+                    </html>"""
 
     @staticmethod
     def _sanitize_filename(name: str) -> str:
@@ -741,7 +764,7 @@ class CourseProcessor:
         path_name = self._sanitize_dir_name(module_name)
         numbered_name = f"{index:02d}-{path_name}"
         module_path_dir = os.path.join(path_dir, numbered_name)
-
+        os.makedirs(module_path_dir, exist_ok=True)
 
         index = 1
         for link in unit_links:
@@ -750,8 +773,7 @@ class CourseProcessor:
                 continue
 
             safe_title = self.html_generator._sanitize_filename(page_data.title)
-            section = self.html_generator._build_section(index, page_data)
-            html_content = self.html_generator._build_document(page_data.title, section)
+            html_content = self.html_generator.m_build_document(index, page_data)
 
             html_file = self.html_generator.m_create_html_file(
                 html_content, module_path_dir, f"{index}", safe_title
